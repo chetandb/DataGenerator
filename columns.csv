@@ -4,3 +4,7 @@ name,string
 age,int
 salary,float
 join_date,date
+is_active,bool
+email,email
+last_login,timestamp
+user_uuid,uuid
