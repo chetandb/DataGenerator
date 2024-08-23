@@ -1,0 +1,6 @@
+column_name,data_type
+id,int
+name,string
+age,int
+salary,float
+join_date,date
