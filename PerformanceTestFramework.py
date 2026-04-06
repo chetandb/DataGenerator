@@ -3,10 +3,26 @@ import random
 import string
 import uuid
 from datetime import datetime, timedelta
-from constants import DOMAINS
+from datagenerator.constants import DOMAINS
+
+"""
+Random Number Generation Strategy:
+- Default (no seed, no random_instance): Uses global random module (stateful, non-deterministic)
+- With seed: Creates isolated Random(seed) instance (deterministic, reproducible)
+- With random_instance: Uses provided Random object (full control over RNG state)
+
+UUID Generation:
+- UUID generation is intentionally non-deterministic (uses uuid.uuid4() by default)
+- To control UUID generation, pass a custom uuid_generator function
+- Example: uuid_generator=lambda: str(uuid.uuid4())  # or any custom generator
+
+Use seed parameter for reproducible performance test data generation.
+Use random_instance parameter for advanced control or when coordinating RNG state across multiple calls.
+Use uuid_generator parameter to customize UUID generation or make it deterministic in tests.
+"""
 
 # Function to generate random data based on data type
-def generate_data(data_type, num_rows=10, current_time=None, seed=None, random_instance=None):
+def generate_data(data_type, num_rows=10, current_time=None, seed=None, random_instance=None, uuid_generator=None):
     # Validate num_rows
     if not isinstance(num_rows, int) or num_rows < 0:
         raise ValueError(f"num_rows must be a non-negative integer, got {num_rows}")
@@ -19,11 +35,16 @@ def generate_data(data_type, num_rows=10, current_time=None, seed=None, random_i
         current_time = datetime.now()
     
     # Setup random instance for reproducibility
+    # Priority: random_instance > seed > default random module
     if random_instance is not None:
+        # Use provided custom Random instance
         rng = random_instance
     elif seed is not None:
+        # Create a new Random instance with specified seed for deterministic output
         rng = random.Random(seed)
     else:
+        # Use global random module (stateful, non-deterministic across calls)
+        # This uses Python's standard random module which maintains global state
         rng = random
     
     if data_type == "int":
@@ -44,7 +65,9 @@ def generate_data(data_type, num_rows=10, current_time=None, seed=None, random_i
         return [(current_time - timedelta(seconds=rng.randint(1, 1000000))).strftime("%Y-%m-%d %H:%M:%S") for _ in
                 range(num_rows)]
     elif data_type == "uuid":
-        return [str(uuid.uuid4()) for _ in range(num_rows)]
+        # Use custom UUID generator if provided, otherwise use uuid.uuid4()
+        gen = uuid_generator if uuid_generator is not None else uuid.uuid4
+        return [str(gen()) for _ in range(num_rows)]
     else:
         supported_types = ["int", "string", "float", "date", "bool", "email", "timestamp", "uuid"]
         raise ValueError(f"Unsupported data type '{data_type}'. Supported types: {', '.join(supported_types)}")
