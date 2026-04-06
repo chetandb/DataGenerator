@@ -3,34 +3,51 @@ import random
 import string
 import uuid
 from datetime import datetime, timedelta
-
-# Cached datetime for performance
-BASE_DATETIME = datetime.now()
+from constants import DOMAINS
 
 # Function to generate random data based on data type
-def generate_data(data_type, num_rows=10):
+def generate_data(data_type, num_rows=10, current_time=None, seed=None, random_instance=None):
+    # Validate num_rows
+    if not isinstance(num_rows, int) or num_rows < 0:
+        raise ValueError(f"num_rows must be a non-negative integer, got {num_rows}")
+    
+    # Explicit handling for num_rows == 0
+    if num_rows == 0:
+        return []
+    
+    if current_time is None:
+        current_time = datetime.now()
+    
+    # Setup random instance for reproducibility
+    if random_instance is not None:
+        rng = random_instance
+    elif seed is not None:
+        rng = random.Random(seed)
+    else:
+        rng = random
+    
     if data_type == "int":
-        return [random.randint(1, 100) for _ in range(num_rows)]
+        return [rng.randint(1, 100) for _ in range(num_rows)]
     elif data_type == "string":
-        return [''.join(random.choices(string.ascii_letters, k=10)) for _ in range(num_rows)]
+        return [''.join(rng.choices(string.ascii_letters, k=10)) for _ in range(num_rows)]
     elif data_type == "float":
-        return [round(random.uniform(1000.00, 5000.00), 2) for _ in range(num_rows)]
+        return [round(rng.uniform(1000.00, 5000.00), 2) for _ in range(num_rows)]
     elif data_type == "date":
-        return [(BASE_DATETIME - timedelta(days=random.randint(1, 1000))).strftime("%Y-%m-%d") for _ in
+        return [(current_time - timedelta(days=rng.randint(1, 1000))).strftime("%Y-%m-%d") for _ in
                 range(num_rows)]
     elif data_type == "bool":
-        return [random.choice([True, False]) for _ in range(num_rows)]
+        return [rng.choice([True, False]) for _ in range(num_rows)]
     elif data_type == "email":
-        domains = ("example.com", "test.com", "mail.com")
-        return [f"{''.join(random.choices(string.ascii_lowercase, k=5))}@{random.choice(domains)}" for _ in
+        return [f"{''.join(rng.choices(string.ascii_lowercase, k=5))}@{rng.choice(DOMAINS)}" for _ in
                 range(num_rows)]
     elif data_type == "timestamp":
-        return [(BASE_DATETIME - timedelta(seconds=random.randint(1, 1000000))).strftime("%Y-%m-%d %H:%M:%S") for _ in
+        return [(current_time - timedelta(seconds=rng.randint(1, 1000000))).strftime("%Y-%m-%d %H:%M:%S") for _ in
                 range(num_rows)]
     elif data_type == "uuid":
         return [str(uuid.uuid4()) for _ in range(num_rows)]
     else:
-        return [None] * num_rows
+        supported_types = ["int", "string", "float", "date", "bool", "email", "timestamp", "uuid"]
+        raise ValueError(f"Unsupported data type '{data_type}'. Supported types: {', '.join(supported_types)}")
 
 
 # Performance testing class
