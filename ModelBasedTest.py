@@ -3,6 +3,10 @@ import string
 from datetime import datetime, timedelta
 import pytest
 
+# Cached datetime for consistency and performance
+CURRENT_DATETIME = datetime.now()
+DATE_LIMIT = CURRENT_DATETIME - timedelta(days=1000)
+
 # Function to generate data
 def generate_data(data_type, num_rows=10):
     if data_type == "int":
@@ -10,7 +14,7 @@ def generate_data(data_type, num_rows=10):
     elif data_type == "string":
         return [''.join(random.choices(string.ascii_letters, k=10)) for _ in range(num_rows)]
     elif data_type == "date":
-        return [(datetime.now() - timedelta(days=random.randint(1, 1000))).strftime("%Y-%m-%d") for _ in range(num_rows)]
+        return [(CURRENT_DATETIME - timedelta(days=random.randint(1, 1000))).strftime("%Y-%m-%d") for _ in range(num_rows)]
     else:
         raise ValueError("Unsupported data type")
 
@@ -27,8 +31,7 @@ class DataGenerationModel:
         elif self.data_type == "string":
             return all(len(item) == 10 for item in self.data)
         elif self.data_type == "date":
-            date_limit = datetime.now() - timedelta(days=1000)
-            return all(datetime.strptime(item, "%Y-%m-%d") >= date_limit for item in self.data)
+            return all(datetime.strptime(item, "%Y-%m-%d") >= DATE_LIMIT for item in self.data)
         else:
             raise ValueError("Unsupported data type")
 
